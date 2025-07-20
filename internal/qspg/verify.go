@@ -15,6 +15,10 @@ import (
 // and looking for `PublishPort=` lines. parse the line and get the exposed port
 // if it is exposed via 127.0.0.1 interface.
 func verifyContainer(name string) ([]uint16, error) {
+	if name == "" {
+		return nil, errors.New("container not defined")
+	}
+
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
