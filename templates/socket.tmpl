@@ -1,0 +1,8 @@
+[Unit]
+Description=Systemd socket for {{ .Container }}
+
+[Socket]
+ListenStream={{ .DevIP }}:{{ .Port }}
+
+[Install]
+WantedBy=sockets.target

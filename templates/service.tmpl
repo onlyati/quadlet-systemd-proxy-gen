@@ -1,0 +1,9 @@
+[Unit]
+Requires={{ .ContainerRoot }}.service
+After={{ .ContainerRoot }}.service
+Requires={{ .ContainerRoot }}-proxy-{{ .Port }}.socket
+After={{ .ContainerRoot }}-proxy-{{ .Port }}.socket
+
+[Service]
+ExecStartPre=/bin/sleep 1
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=30s 127.0.0.1:{{ .Port }}
