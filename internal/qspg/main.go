@@ -9,20 +9,30 @@ import (
 )
 
 type tmplData struct {
-	ip      string
-	quadlet string
-	ports   []uint16
+	ip          string
+	port        uint
+	quadlet     string
+	ports       []uint
+	quadletIP   string
+	quadletPort uint
 }
 
 func Main(templates embed.FS) {
 	ip := flag.String("ip", "10.0.0.1", "IP address where socket bind")
+	port := flag.Uint("port", 0, "Port for socket address, default: same as in quadlet file")
 	quadlet := flag.String("quadlet", "", "Name of the the *.contianer or *.pod file that is read and parsed for port")
+	quadletIP := flag.String("quadlet-ip", "127.0.0.1", "IP address where socket bind")
+	quadletPort := flag.Uint("quadlet-port", 0, "Port for socket file, if not defined then automatically discover")
 	flag.Parse()
 
 	fmt.Println("verify parameters:")
 	fmt.Println("- ip: " + *ip)
+	fmt.Printf("- port: %d\n", *port)
 	fmt.Println("- container: " + *quadlet)
+	fmt.Println("- quadletIP: " + *quadletIP)
+	fmt.Printf("- quadletPort: %d\n", *quadletPort)
 
+	// Validate the socket IP address
 	found, err := verifyIP(*ip)
 	if err != nil {
 		fmt.Println("ERROR: " + err.Error())
@@ -30,7 +40,19 @@ func Main(templates embed.FS) {
 	}
 
 	if !found {
-		fmt.Println("ERROR: defined ip address is not a loop back device")
+		fmt.Println("ERROR: defined ip address is not found: " + *ip)
+		os.Exit(1)
+	}
+
+	// Valiudate the tareget IP address
+	found, err = verifyIP(*quadletIP)
+	if err != nil {
+		fmt.Println("ERROR: " + err.Error())
+		os.Exit(1)
+	}
+
+	if !found {
+		fmt.Println("ERROR: defined ip address is not found: " + *quadletIP)
 		os.Exit(1)
 	}
 
@@ -40,10 +62,18 @@ func Main(templates embed.FS) {
 		os.Exit(1)
 	}
 
+	// If quadlet port specified, does not matter what has been discovered
+	if *port != 0 {
+		ports = []uint{*port}
+	}
+
 	data := tmplData{
-		ip:      *ip,
-		quadlet: *quadlet,
-		ports:   ports,
+		ip:          *ip,
+		port:        *port,
+		quadlet:     *quadlet,
+		ports:       ports,
+		quadletIP:   *quadletIP,
+		quadletPort: *quadletPort,
 	}
 	fmt.Printf("creating socket and proxy files for ports: %+v\n", ports)
 

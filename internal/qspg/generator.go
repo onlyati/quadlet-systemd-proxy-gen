@@ -17,6 +17,10 @@ func generateServiceFile(templates embed.FS, data tmplData) error {
 	}
 
 	splitQuadlet := strings.Split(data.quadlet, ".")
+	containerRoot := splitQuadlet[0]
+	if splitQuadlet[1] == "pod" {
+		containerRoot = fmt.Sprintf("%s-pod", splitQuadlet[0])
+	}
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -24,15 +28,22 @@ func generateServiceFile(templates embed.FS, data tmplData) error {
 	}
 
 	tmplData := map[string]any{
-		"ContainerRoot": splitQuadlet[0],
+		"ContainerRoot": containerRoot,
+		"QuadletIP":     data.quadletIP,
 	}
 
 	for _, port := range data.ports {
-		fileName := fmt.Sprintf("%s-proxy-%d.service", splitQuadlet[0], port)
+		fileName := fmt.Sprintf("%s-proxy-%d.service", containerRoot, port)
 		filePath := path.Join(homeDir, ".config", "systemd", "user", fileName)
 		fmt.Println("generate file: " + filePath)
 
 		tmplData["Port"] = port
+
+		if data.quadletPort != 0 {
+			tmplData["QuadletPort"] = data.quadletPort
+		} else {
+			tmplData["QuadletPort"] = port
+		}
 		file, err := os.Create(filePath)
 		if err != nil {
 			return err
@@ -56,6 +67,10 @@ func generateSocketFile(templates embed.FS, data tmplData) error {
 	}
 
 	splitQuadlet := strings.Split(data.quadlet, ".")
+	containerRoot := splitQuadlet[0]
+	if splitQuadlet[1] == "pod" {
+		containerRoot = fmt.Sprintf("%s-pod", splitQuadlet[0])
+	}
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -68,7 +83,7 @@ func generateSocketFile(templates embed.FS, data tmplData) error {
 	}
 
 	for _, port := range data.ports {
-		fileName := fmt.Sprintf("%s-proxy-%d.socket", splitQuadlet[0], port)
+		fileName := fmt.Sprintf("%s-proxy-%d.socket", containerRoot, port)
 		filePath := path.Join(homeDir, ".config", "systemd", "user", fileName)
 		fmt.Println("generate file: " + filePath)
 

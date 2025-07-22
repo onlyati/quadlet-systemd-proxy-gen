@@ -14,9 +14,13 @@ import (
 // Read the container from the `~/.config/containers/systemd/{{name}}` file
 // and looking for `PublishPort=` lines. parse the line and get the exposed port
 // if it is exposed via 127.0.0.1 interface.
-func verifyContainer(name string) ([]uint16, error) {
+func verifyContainer(name string) ([]uint, error) {
 	if name == "" {
 		return nil, errors.New("container not defined")
+	}
+
+	if !strings.HasSuffix(name, ".container") && !strings.HasSuffix(name, ".pod") {
+		return nil, errors.New("quadlet is neither a .container nor a .pod file")
 	}
 
 	homeDir, err := os.UserHomeDir()
@@ -37,7 +41,7 @@ func verifyContainer(name string) ([]uint16, error) {
 
 	scanner := bufio.NewScanner(file)
 
-	var ports []uint16
+	var ports []uint
 	for scanner.Scan() {
 		if s, found := strings.CutPrefix(scanner.Text(), "PublishPort="); found {
 			tmp := strings.Split(s, ":")
@@ -51,7 +55,7 @@ func verifyContainer(name string) ([]uint16, error) {
 				if err != nil {
 					return nil, err
 				}
-				ports = append(ports, uint16(p))
+				ports = append(ports, uint(p))
 			}
 		}
 	}
@@ -73,10 +77,6 @@ func verifyIP(ipAddress string) (bool, error) {
 	}
 
 	for _, iface := range interfaces {
-		if (iface.Flags & net.FlagLoopback) == 0 {
-			continue
-		}
-
 		addrs, err := iface.Addrs()
 		if err != nil {
 			return false, err
