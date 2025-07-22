@@ -5,6 +5,23 @@ container activation, based on socket usage, with Podman Quadlet. For more
 details check this
 [post](https://thinkaboutit.tech/posts/2025-07-20-adhoc-containers-with-systemd-and-quadlet/).
 
+```bash
+# Note, paramers work with '--' starting
+$ quadlet-systemd-proxy-gen --help
+Usage of quadlet-systemd-proxy-gen:
+  -ip string
+        IP address where socket bind (default "10.0.0.1")
+  -port uint
+        Port for socket address, default: same as in quadlet file
+  -quadlet string
+        Name of the the *.contianer or *.pod file that is read and parsed for port
+  -quadlet-ip string
+        IP address where socket bind (default "127.0.0.1")
+  -quadlet-port uint
+        Port for socket file, if not defined then automatically discover
+
+```
+
 ## Example for usage
 
 We have this Quadlet file, let it be called `nginx.container`:
